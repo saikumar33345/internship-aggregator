@@ -1,1 +1,1 @@
-from app.schemas.job import JobCreate,JobResponse
+from app.schemas.job import JobCreate,JobResponse,JobUpdate
