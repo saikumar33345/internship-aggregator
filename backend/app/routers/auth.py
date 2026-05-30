@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
 from app.schemas.user import UserCreate,UserResponse
-from app.services.auth import create_access_token
+from app.services.auth import create_access_token,get_current_user
 from passlib.context import CryptContext
 
 router=APIRouter(prefix="/auth",tags=["Authentication"])
@@ -38,3 +38,7 @@ def login(form_data:OAuth2PasswordRequestForm=Depends(),db:Session=Depends(get_d
         raise HTTPException(status_code=403,detail="Invalid Credentials")
     token=create_access_token(data={"user_id":user.id})
     return {"access_token":token,"token_type":"bearer"}
+
+@router.get("/me",response_model=UserResponse)
+def get_me(current_user:User=Depends(get_current_user)):
+    return current_user
