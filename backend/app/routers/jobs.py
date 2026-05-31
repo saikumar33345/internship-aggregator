@@ -10,8 +10,23 @@ router=APIRouter(
 )
 
 @router.get("/",response_model=List[JobResponse])
-def get_jobs(db:Session=Depends(get_db)):
-    jobs=db.query(Job).all()
+def get_jobs(db:Session=Depends(get_db),
+             keyword:str=None,
+             location:str=None,
+             min_salary:str=None,
+             skip:int=0,
+             limit:int=10):
+    
+   
+    query=db.query(Job)
+    if keyword:
+        query=query.filter(Job.title.icontains(keyword))
+    if location:
+        query=query.filter(Job.location.icontains(location))
+    if min_salary:
+        query=query.filter(Job.salary>=min_salary)
+    
+    jobs=query.offset(skip).limit(limit).all()
     return jobs
 
 @router.get("/{id}",response_model=JobResponse)
