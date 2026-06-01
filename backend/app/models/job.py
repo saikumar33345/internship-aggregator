@@ -6,6 +6,7 @@ class Job(Base):
     __tablename__ = "jobs"
 
     id = Column(Integer, primary_key=True, index=True)
+    remotive_id=Column(Integer,unique=True,nullable=True)
     title = Column(String, nullable=False)
     company = Column(String, nullable=False)
     location = Column(String, nullable=True)

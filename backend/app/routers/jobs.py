@@ -4,6 +4,9 @@ from typing import List
 from app.database import get_db
 from app.models.job import Job
 from app.schemas.job import JobCreate,JobResponse,JobUpdate
+from app.services.fetch_jobs import fetch_and_save_jobs
+from app.models.user import User
+from app.services.auth import get_current_user
 
 router=APIRouter(
     prefix="/jobs",tags=["Jobs"]
@@ -74,6 +77,11 @@ def patch_job(id:int,job:JobUpdate,db:Session=Depends(get_db)):
     db.commit()
     db.refresh(existing_job)
     return existing_job
+
+@router.post("/fetch")
+def trigger_fetch(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    count = fetch_and_save_jobs(db)
+    return {"message": f"Fetch complete. {count} new jobs saved."}
     
 
 
