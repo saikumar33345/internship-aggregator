@@ -5,6 +5,7 @@ from app.database import engine
 from app.models.job import Job
 from app.models.user import User
 from app.models.alert import AlertFilter
+from app.services.scheduler import start_scheduler
 
 
 Job.metadata.create_all(bind=engine)
@@ -24,6 +25,11 @@ app.add_middleware(
 app.include_router(jobs.router)
 app.include_router(auth.router)
 app.include_router(alerts.router)
+
+@app.on_event("startup")
+def startup_event():
+    start_scheduler()
+
 
 @app.get("/")
 def home():
