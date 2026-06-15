@@ -15,6 +15,7 @@ const Navbar = () => {
           <div className="w-7 h-7 bg-white rounded-md flex items-center justify-center">
             <span className="text-black font-black text-sm">I</span>
           </div>
+
           <span className="text-white font-bold text-lg tracking-tight">
             InternHub
           </span>
@@ -36,6 +37,14 @@ const Navbar = () => {
               >
                 Profile
               </Link>
+
+              <Link
+                to="/dashboard"
+                className="text-gray-400 hover:text-white px-4 py-2 rounded-lg text-sm font-medium transition-all hover:bg-white/5"
+              >
+                Analytics
+              </Link>
+
               <button
                 onClick={handleLogout}
                 className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
@@ -51,6 +60,7 @@ const Navbar = () => {
               >
                 Login
               </Link>
+
               <Link
                 to="/register"
                 className="bg-white text-black px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:bg-gray-100"

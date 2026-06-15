@@ -1,14 +1,19 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 
+const token = localStorage.getItem("token");
+
 const FLOATING_TAGS = [
   "Python", "React", "FastAPI", "Node.js", "Machine Learning",
   "UI/UX", "DevOps", "Data Science", "Backend", "Frontend",
   "AWS", "Docker", "Golang", "Rust", "TypeScript"
 ];
 
+
 const Home = () => {
   const [mounted, setMounted] = useState(false);
+  useEffect(() => { document.title = "InternHub — Find Your Dream Internship"; }, []);
+
 
   useEffect(() => {
     setMounted(true);
@@ -45,19 +50,38 @@ const Home = () => {
 
         {/* CTA Buttons */}
         <div className={`flex gap-4 justify-center mb-20 transition-all duration-700 delay-300 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
-          <Link
-            to="/register"
-            className="bg-white text-black font-semibold px-8 py-3.5 rounded-xl hover:bg-gray-100 transition-all shadow-lg shadow-white/10"
-          >
-            Get Started Free →
-          </Link>
-          <Link
-            to="/jobs"
-            className="bg-white/5 border border-white/10 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-white/10 transition-all"
-          >
-            Browse Jobs
-          </Link>
-        </div>
+  {token ? (
+    <>
+      <Link
+        to="/jobs"
+        className="bg-white text-black font-semibold px-8 py-3.5 rounded-xl hover:bg-gray-100 transition-all shadow-lg shadow-white/10"
+      >
+        Browse Jobs →
+      </Link>
+      <Link
+        to="/profile"
+        className="bg-white/5 border border-white/10 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-white/10 transition-all"
+      >
+        My Profile
+      </Link>
+    </>
+  ) : (
+    <>
+      <Link
+        to="/register"
+        className="bg-white text-black font-semibold px-8 py-3.5 rounded-xl hover:bg-gray-100 transition-all shadow-lg shadow-white/10"
+      >
+        Get Started Free →
+      </Link>
+      <Link
+        to="/jobs"
+        className="bg-white/5 border border-white/10 text-white font-semibold px-8 py-3.5 rounded-xl hover:bg-white/10 transition-all"
+      >
+        Browse Jobs
+      </Link>
+    </>
+  )}
+</div>
 
         {/* Floating tags */}
         <div className={`flex flex-wrap gap-2 justify-center max-w-2xl mx-auto mb-20 transition-all duration-700 delay-500 ${mounted ? "opacity-100" : "opacity-0"}`}>

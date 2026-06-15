@@ -7,8 +7,11 @@ const Jobs = () => {
   const [keyword, setKeyword] = useState("");
   const [location, setLocation] = useState("");
   const [skip, setSkip] = useState(0);
+  const [savedJobIds, setSavedJobIds] = useState([]);
 
   const limit = 10;
+  useEffect(() => { document.title = "Browse Jobs — InternHub"; }, []);
+
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -36,9 +39,39 @@ const Jobs = () => {
     }
   };
 
+  const fetchSavedIds = async () => {
+    try {
+      const response = await API.get("/saved-jobs/");
+      setSavedJobIds(response.data.map((job) => job.id));
+    } catch (err) {
+      console.error("Failed to fetch saved jobs", err);
+    }
+  };
+
+  const toggleSave = async (jobId) => {
+    const isSaved = savedJobIds.includes(jobId);
+
+    try {
+      if (isSaved) {
+        await API.delete(`/saved-jobs/${jobId}`);
+
+        setSavedJobIds((prev) =>
+          prev.filter((id) => id !== jobId)
+        );
+      } else {
+        await API.post(`/saved-jobs/${jobId}`);
+
+        setSavedJobIds((prev) => [...prev, jobId]);
+      }
+    } catch (err) {
+      console.error("Failed to toggle save", err);
+    }
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchJobs();
+      fetchSavedIds();
     }, 300);
 
     return () => clearTimeout(timer);
@@ -46,10 +79,8 @@ const Jobs = () => {
 
   return (
     <div className="min-h-screen bg-black grid-bg pt-20">
-      {/* Background Glow */}
       <div className="fixed top-0 right-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Header */}
       <div className="border-b border-white/10 px-6 py-8">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl font-black text-white mb-1">
@@ -60,7 +91,6 @@ const Jobs = () => {
             {jobs.length} opportunities · Auto-updated every 6 hours
           </p>
 
-          {/* Filters */}
           <div className="flex gap-3 flex-wrap">
             <input
               type="text"
@@ -98,7 +128,6 @@ const Jobs = () => {
         </div>
       </div>
 
-      {/* Jobs List */}
       <div className="max-w-6xl mx-auto px-6 py-8">
         {loading ? (
           <div className="grid gap-3">
@@ -167,28 +196,42 @@ const Jobs = () => {
                     </div>
                   </div>
 
-                  {job.source_url && (
-                    <a
-                      href={job.source_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="bg-white text-black text-sm font-semibold px-4 py-2 rounded-xl hover:bg-gray-100 transition-all ml-4 shrink-0"
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => toggleSave(job.id)}
+                      className={`text-xl transition-all hover:scale-110 ${
+                        savedJobIds.includes(job.id)
+                          ? "text-red-400"
+                          : "text-gray-600 hover:text-red-400"
+                      }`}
                     >
-                      Apply →
-                    </a>
-                  )}
+                      {savedJobIds.includes(job.id) ? "❤️" : "🤍"}
+                    </button>
+
+                    {job.source_url && (
+                      <a
+                        href={job.source_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white text-black text-sm font-semibold px-4 py-2 rounded-xl hover:bg-gray-100 transition-all"
+                      >
+                        Apply →
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* Pagination */}
         {!loading && jobs.length > 0 && (
           <div className="flex items-center justify-between mt-8">
             <button
-              onClick={() => setSkip(Math.max(0, skip - limit))}
+              onClick={() =>
+                setSkip((prev) => Math.max(0, prev - limit))
+              }
               disabled={skip === 0}
               className="bg-white/5 border border-white/10 text-gray-400 px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
@@ -200,7 +243,7 @@ const Jobs = () => {
             </span>
 
             <button
-              onClick={() => setSkip(skip + limit)}
+              onClick={() => setSkip((prev) => prev + limit)}
               disabled={jobs.length < limit}
               className="bg-white text-black px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >

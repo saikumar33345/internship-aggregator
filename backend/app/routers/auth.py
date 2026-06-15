@@ -7,6 +7,7 @@ from app.schemas.user import UserCreate,UserResponse
 from app.services.auth import create_access_token,get_current_user
 from passlib.context import CryptContext
 
+
 router=APIRouter(prefix="/auth",tags=["Authentication"])
 
 pwd_context=CryptContext(schemes=["bcrypt"],deprecated="auto")
@@ -42,3 +43,4 @@ def login(form_data:OAuth2PasswordRequestForm=Depends(),db:Session=Depends(get_d
 @router.get("/me",response_model=UserResponse)
 def get_me(current_user:User=Depends(get_current_user)):
     return current_user
+

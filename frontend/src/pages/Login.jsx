@@ -13,6 +13,9 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     setError("");
+  
+    useEffect(() => { document.title = "Login — InternHub"; }, []);
+
 
     try {
       const formData = new FormData();
