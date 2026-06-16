@@ -1,4 +1,4 @@
-from fastapi import APIRouter ,Depends,HTTPException
+from fastapi import APIRouter ,Depends,HTTPException,BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
 from app.database import get_db
@@ -79,9 +79,6 @@ def patch_job(id:int,job:JobUpdate,db:Session=Depends(get_db)):
     return existing_job
 
 @router.post("/fetch")
-def trigger_fetch(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    count = fetch_and_save_jobs(db)
-    return {"message": f"Fetch complete. {count} new jobs saved."}
-    
-
-
+def trigger_fetch(background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    background_tasks.add_task(fetch_and_save_jobs, db)
+    return {"message": "Job fetch started in background. Check back in 2 minutes."}
