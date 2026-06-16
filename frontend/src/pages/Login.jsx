@@ -1,5 +1,5 @@
-import { useState,useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import API from "../api/axios";
 
 const Login = () => {
@@ -7,15 +7,15 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+
+  useEffect(() => {
+    document.title = "Login — InternHub";
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-  
-    useEffect(() => { document.title = "Login — InternHub"; }, []);
-
 
     try {
       const formData = new FormData();
@@ -33,14 +33,11 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-black grid-bg flex items-center justify-center px-4">
-      {/* Gradient orbs */}
       <div className="fixed top-1/4 left-1/4 w-80 h-80 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none" />
       <div className="fixed bottom-1/4 right-1/4 w-72 h-72 bg-purple-600/15 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative w-full max-w-md fade-in">
-        {/* Card */}
         <div className="bg-white/5 border border-white/10 rounded-2xl p-8 backdrop-blur-sm">
-          {/* Logo */}
           <div className="flex items-center gap-2 mb-8">
             <div className="w-7 h-7 bg-white rounded-md flex items-center justify-center">
               <span className="text-black font-black text-sm">I</span>
