@@ -93,3 +93,25 @@ def trigger_fetch(
         "message":
         f"✅ Fetch complete! {count} new jobs saved."
     }
+
+import socket
+
+@router.get("/smtp-test")
+def smtp_test():
+    try:
+        sock = socket.create_connection(
+            ("smtp-relay.brevo.com", 587),
+            timeout=10
+        )
+
+        sock.close()
+
+        return {
+            "status": "connected"
+        }
+
+    except Exception as e:
+        return {
+            "status": "failed",
+            "error": str(e)
+        }
