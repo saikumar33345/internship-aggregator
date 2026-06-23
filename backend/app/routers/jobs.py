@@ -29,7 +29,7 @@ def get_jobs(db:Session=Depends(get_db),
     if min_salary:
         query=query.filter(Job.salary>=min_salary)
     
-    jobs=query.offset(skip).limit(limit).all()
+    jobs=query.order_by(Job.created_at.desc()).offset(skip).limit(limit).all()
     return jobs
 
 @router.get("/{id}",response_model=JobResponse)
@@ -79,6 +79,6 @@ def patch_job(id:int,job:JobUpdate,db:Session=Depends(get_db)):
     return existing_job
 
 @router.post("/fetch")
-def trigger_fetch(background_tasks: BackgroundTasks, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    background_tasks.add_task(fetch_and_save_jobs, db)
-    return {"message": "Job fetch started in background. Check back in 2 minutes."}
+def trigger_fetch(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    count = fetch_and_save_jobs(db)
+    return {"message": f"✅ Fetch complete! {count} new jobs saved. Check your email for alerts."}

@@ -9,6 +9,7 @@ import ProtectedRoute from "./components/ProtectedRoute"
 import Dashboard from "./pages/Dashboard"
 import NotFound from "./pages/NotFound"
 import Footer from "./components/Footer"
+import JobDetail from "./pages/JobDetail"
 
 function App(){
   return(
@@ -21,6 +22,7 @@ function App(){
       <Route path="/register" element={<Register />} />
       <Route path="/profile"  element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/jobs/:id" element={<JobDetail />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
     <Footer />

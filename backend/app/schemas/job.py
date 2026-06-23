@@ -9,6 +9,7 @@ class JobCreate(BaseModel):
     salary:Optional[str]=None
     job_type:Optional[str]=None
     source_url:Optional[str]=None
+    description:Optional[str]=None
 
 class JobUpdate(BaseModel):
     title:Optional[str]=None
@@ -17,6 +18,7 @@ class JobUpdate(BaseModel):
     salary:Optional[str]=None
     job_type:Optional[str]=None
     source_url:Optional[str]=None
+    description:Optional[str]=None
 class JobResponse(BaseModel):
     id:int
     title:str
@@ -25,6 +27,7 @@ class JobResponse(BaseModel):
     salary:Optional[str]=None
     job_type:Optional[str]=None
     source_url:Optional[str]=None
+    description:Optional[str]=None
     created_at:datetime
 
 

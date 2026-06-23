@@ -37,6 +37,7 @@ def fetch_remotive_jobs(db: Session):
                 salary=job.get("salary", None),
                 job_type=job.get("job_type", None),
                 source_url=job.get("url", None),
+                description=job.get("description",None),
             )
             db.add(new_job)
             new_count += 1
@@ -81,6 +82,7 @@ def fetch_adzuna_jobs(db: Session):
                 salary=str(job.get("salary_min", "")) if job.get("salary_min") else None,
                 job_type="full_time",
                 source_url=job.get("redirect_url", None),
+                description=job.get("description",None),
             )
             db.add(new_job)
             new_count += 1

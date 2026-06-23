@@ -1,21 +1,58 @@
 import { useState, useEffect } from "react";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
+  BarChart, Bar, XAxis, YAxis, Tooltip,
+  ResponsiveContainer, Cell, PieChart, Pie, Legend
 } from "recharts";
 import API from "../api/axios";
 
+const GRADIENT_COLORS = [
+  "#6366f1", "#8b5cf6", "#a855f7", "#ec4899", "#f43f5e"
+];
 
-const COLORS = ["#6366f1", "#8b5cf6", "#a855f7", "#ec4899", "#f59e0b"];
+const PIE_COLORS = [
+  "#6366f1", "#8b5cf6", "#a855f7", "#ec4899", "#f59e0b"
+];
 
-const StatCard = ({ label, value, icon }) => (
-  <div className="bg-white/5 border border-white/10 rounded-2xl p-6 text-center card-hover">
-    <div className="text-3xl mb-2">{icon}</div>
+const CustomBarTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div style={{
+        background: "#0f0f0f",
+        border: "1px solid rgba(255,255,255,0.1)",
+        borderRadius: 12,
+        padding: "10px 14px",
+      }}>
+        <p style={{ color: "#fff", fontSize: 13, fontWeight: 700, marginBottom: 4 }}>{label}</p>
+        <p style={{ color: "#6366f1", fontSize: 12 }}>{payload[0].value} jobs</p>
+      </div>
+    );
+  }
+  return null;
+};
+
+const CustomPieTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div style={{
+        background: "#0f0f0f",
+        border: "1px solid rgba(255,255,255,0.1)",
+        borderRadius: 12,
+        padding: "10px 14px",
+      }}>
+        <p style={{ color: "#fff", fontSize: 13, fontWeight: 700 }}>{payload[0].name}</p>
+        <p style={{ color: payload[0].fill, fontSize: 12 }}>{payload[0].value} jobs</p>
+      </div>
+    );
+  }
+  return null;
+};
+
+const StatCard = ({ label, value, icon, color }) => (
+  <div className="bg-white/5 border border-white/10 rounded-2xl p-6 card-hover">
+    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl mb-4`}
+      style={{ background: `${color}20`, border: `1px solid ${color}30` }}>
+      {icon}
+    </div>
     <div className="text-3xl font-black text-white mb-1">{value}</div>
     <div className="text-gray-500 text-sm">{label}</div>
   </div>
@@ -27,32 +64,31 @@ const Dashboard = () => {
   const [topLocations, setTopLocations] = useState([]);
   const [jobsByType, setJobsByType] = useState([]);
   const [loading, setLoading] = useState(true);
-  useEffect(() => { document.title = "Analytics — InternHub"; }, []);
 
   useEffect(() => {
+    document.title = "Analytics — InternHub";
     fetchAll();
   }, []);
 
   const fetchAll = async () => {
     setLoading(true);
-
     try {
-      const [
-        summaryRes,
-        companiesRes,
-        locationsRes,
-        jobsTypeRes,
-      ] = await Promise.all([
+      const [summaryRes, companiesRes, locationsRes, jobsTypeRes] = await Promise.all([
         API.get("/analytics/summary"),
         API.get("/analytics/top-companies"),
         API.get("/analytics/jobs-by-location"),
         API.get("/analytics/jobs-by-type"),
       ]);
-
       setSummary(summaryRes.data);
-      setTopCompanies(Array.isArray(companiesRes.data) ? companiesRes.data : []);
-      setTopLocations(Array.isArray(locationsRes.data) ? locationsRes.data : []);
-      setJobsByType(Array.isArray(jobsTypeRes.data) ? jobsTypeRes.data : []);
+      setTopCompanies(companiesRes.data);
+      setTopLocations(locationsRes.data);
+      setJobsByType(jobsTypeRes.data.map(j => ({
+        ...j,
+        job_type: j.job_type === "full_time" ? "Full Time" :
+          j.job_type === "part_time" ? "Part Time" :
+          j.job_type === "contract" ? "Contract" :
+          j.job_type === "internship" ? "Internship" : j.job_type
+      })));
     } catch (err) {
       console.error("Failed to fetch analytics", err);
     } finally {
@@ -60,27 +96,10 @@ const Dashboard = () => {
     }
   };
 
-  const CustomTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-gray-900 border border-white/10 rounded-xl px-4 py-2">
-          <p className="text-white text-sm font-semibold">{label}</p>
-          <p className="text-indigo-400 text-sm">
-            {payload[0].value} jobs
-          </p>
-        </div>
-      );
-    }
-
-    return null;
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-black grid-bg pt-20 flex items-center justify-center">
-        <div className="text-gray-500 text-sm">
-          Loading analytics...
-        </div>
+        <div className="text-gray-500 text-sm">Loading analytics...</div>
       </div>
     );
   }
@@ -88,66 +107,56 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-black grid-bg pt-20">
       <div className="fixed top-0 left-1/3 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="fixed bottom-0 right-1/3 w-80 h-80 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-6xl mx-auto px-6 py-10">
-        <div className="mb-8">
-          <h1 className="text-3xl font-black text-white mb-1">
-            Analytics
-          </h1>
-          <p className="text-gray-500 text-sm">
-            Live insights
-          </p>
+
+        {/* Header */}
+        <div className="mb-10">
+          <h1 className="text-3xl font-black text-white mb-1">Analytics</h1>
+          <p className="text-gray-500 text-sm">Live insights from your internship database</p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mb-8">
-          <StatCard
-            label="Total Jobs"
-            value={summary?.total_jobs || 0}
-            icon="💼"
-          />
-
-          <StatCard
-            label="Total Users"
-            value={summary?.total_users || 0}
-            icon="👥"
-          />
+        {/* Stat Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+          <StatCard label="Total Jobs" value={summary?.total_jobs || 0} icon="💼" color="#6366f1" />
+          <StatCard label="Total Users" value={summary?.total_users || 0} icon="👥" color="#a855f7" />
+          <StatCard label="Companies" value={topCompanies.length} icon="🏢" color="#ec4899" />
+          <StatCard label="Locations" value={topLocations.length} icon="📍" color="#f59e0b" />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Top Companies + Top Locations */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+
           {/* Top Companies */}
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h2 className="text-white font-bold text-lg mb-6">
-              🏢 Top Hiring Companies
-            </h2>
-
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={topCompanies} layout="vertical">
+            <div className="flex items-center gap-2 mb-6">
+              <div className="w-2 h-6 bg-indigo-500 rounded-full" />
+              <h2 className="text-white font-bold text-base">Top Hiring Companies</h2>
+            </div>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={topCompanies} layout="vertical" margin={{ left: 10, right: 20 }}>
                 <XAxis
                   type="number"
-                  tick={{ fill: "#6b7280", fontSize: 12 }}
+                  tick={{ fill: "#4b5563", fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
                 />
-
                 <YAxis
                   type="category"
                   dataKey="company"
                   tick={{ fill: "#9ca3af", fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
-                  width={100}
+                  width={90}
                 />
-
-                <Tooltip
-                  content={<CustomTooltip />}
-                  cursor={{ fill: "rgba(255,255,255,0.03)" }}
-                />
-
-                <Bar dataKey="count" radius={[0, 8, 8, 0]}>
+                <Tooltip content={<CustomBarTooltip />} cursor={{ fill: "rgba(255,255,255,0.02)" }} />
+                <Bar dataKey="count" radius={[0, 8, 8, 0]} maxBarSize={20}>
                   {topCompanies.map((_, index) => (
                     <Cell
                       key={index}
-                      fill={COLORS[index % COLORS.length]}
+                      fill={GRADIENT_COLORS[index % GRADIENT_COLORS.length]}
+                      fillOpacity={0.9}
                     />
                   ))}
                 </Bar>
@@ -157,87 +166,33 @@ const Dashboard = () => {
 
           {/* Top Locations */}
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h2 className="text-white font-bold text-lg mb-6">
-              📍 Top Locations
-            </h2>
-
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={topLocations} layout="vertical">
+            <div className="flex items-center gap-2 mb-6">
+              <div className="w-2 h-6 bg-purple-500 rounded-full" />
+              <h2 className="text-white font-bold text-base">Top Locations</h2>
+            </div>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={topLocations} layout="vertical" margin={{ left: 10, right: 20 }}>
                 <XAxis
                   type="number"
-                  tick={{ fill: "#6b7280", fontSize: 12 }}
+                  tick={{ fill: "#4b5563", fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
                 />
-
                 <YAxis
                   type="category"
                   dataKey="location"
                   tick={{ fill: "#9ca3af", fontSize: 11 }}
                   axisLine={false}
                   tickLine={false}
-                  width={100}
+                  width={90}
                 />
-
-                <Tooltip
-                  content={<CustomTooltip />}
-                  cursor={{ fill: "rgba(255,255,255,0.03)" }}
-                />
-
-                <Bar dataKey="count" radius={[0, 8, 8, 0]}>
+                <Tooltip content={<CustomBarTooltip />} cursor={{ fill: "rgba(255,255,255,0.02)" }} />
+                <Bar dataKey="count" radius={[0, 8, 8, 0]} maxBarSize={20}>
                   {topLocations.map((_, index) => (
                     <Cell
                       key={index}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Jobs By Type */}
-          <div className="md:col-span-2 bg-white/5 border border-white/10 rounded-2xl p-6">
-            <h2 className="text-white font-bold text-lg mb-6">
-              📊 Jobs by Type
-            </h2>
-
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={jobsByType}>
-                <XAxis
-                  dataKey="job_type"
-                  tick={{ fill: "#9ca3af", fontSize: 12 }}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(val) =>
-                    val === "full_time"
-                      ? "Full Time"
-                      : val === "part_time"
-                      ? "Part Time"
-                      : val === "contract"
-                      ? "Contract"
-                      : val === "internship"
-                      ? "Internship"
-                      : val
-                  }
-                />
-
-                <YAxis
-                  tick={{ fill: "#6b7280", fontSize: 12 }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-
-                <Tooltip
-                  content={<CustomTooltip />}
-                  cursor={{ fill: "rgba(255,255,255,0.03)" }}
-                />
-
-                <Bar dataKey="count" radius={[8, 8, 0, 0]}>
-                  {jobsByType.map((_, index) => (
-                    <Cell
-                      key={index}
-                      fill={COLORS[index % COLORS.length]}
+                      fill={GRADIENT_COLORS[index % GRADIENT_COLORS.length]}
+                      fillOpacity={0.9}
                     />
                   ))}
                 </Bar>
@@ -245,6 +200,45 @@ const Dashboard = () => {
             </ResponsiveContainer>
           </div>
         </div>
+
+        {/* Jobs by Type — Pie Chart */}
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <div className="w-2 h-6 bg-pink-500 rounded-full" />
+            <h2 className="text-white font-bold text-base">Jobs by Type</h2>
+          </div>
+          <div className="flex items-center justify-center">
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={jobsByType}
+                  dataKey="count"
+                  nameKey="job_type"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={90}
+                  innerRadius={50}
+                  paddingAngle={4}
+                >
+                  {jobsByType.map((_, index) => (
+                    <Cell
+                      key={index}
+                      fill={PIE_COLORS[index % PIE_COLORS.length]}
+                      stroke="transparent"
+                    />
+                  ))}
+                </Pie>
+                <Tooltip content={<CustomPieTooltip />} />
+                <Legend
+                  formatter={(value) => (
+                    <span style={{ color: "#9ca3af", fontSize: 12 }}>{value}</span>
+                  )}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
       </div>
     </div>
   );

@@ -94,17 +94,18 @@ const Profile = () => {
   };
 
   const handleFetchJobs = async () => {
-    setFetching(true);
-
-    try {
-      const response = await API.post("/jobs/fetch");
-      alert(response.data.message);
-    } catch (err) {
-      console.error("Failed to fetch jobs", err);
-    } finally {
-      setFetching(false);
-    }
-  };
+  setFetching(true);
+  setFetchStatus("");
+  try {
+    const response = await API.post("/jobs/fetch", {}, { timeout: 180000 });
+    setFetchStatus(response.data.message);
+  } catch (err) {
+    setFetchStatus(" Fetch failed. Try again.");
+    console.error("Failed to fetch jobs", err);
+  } finally {
+    setFetching(false);
+  }
+};
 
   if (loading) {
     return (

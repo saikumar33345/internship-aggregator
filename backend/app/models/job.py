@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime,Text
 from sqlalchemy.sql import func 
 from app.database import Base
 
@@ -13,6 +13,7 @@ class Job(Base):
     salary = Column(String, nullable=True)
     job_type = Column(String, nullable=True)
     source_url = Column(String, nullable=True)
+    description=Column(String,nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
 
