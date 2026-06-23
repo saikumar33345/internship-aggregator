@@ -3,6 +3,20 @@ import { useParams, useNavigate } from "react-router-dom";
 import API from "../api/axios";
 import DOMPurify from "dompurify";
 
+const getDaysAgo = (date) => {
+  if (!date) return "Recently";
+
+  const days = Math.floor(
+    (Date.now() - new Date(date)) /
+      (1000 * 60 * 60 * 24)
+  );
+
+  if (days <= 0) return "Today";
+  if (days === 1) return "1 day ago";
+
+  return `${days} days ago`;
+};
+
 const JobDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -10,6 +24,7 @@ const JobDetail = () => {
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
+  const [expanded,setExpanded]=useState(false);
 
   useEffect(() => {
     document.title = "Job Details — InternHub";
@@ -87,8 +102,13 @@ const JobDetail = () => {
   }
 
   const description = DOMPurify.sanitize(
-    job.description || ""
-  );
+  job.description || ""
+);
+
+const shortDescription =
+  description.length > 2000
+    ? description.slice(0, 2000) + "..."
+    : description;
 
   return (
     <div className="min-h-screen bg-black grid-bg pt-20">
@@ -103,37 +123,45 @@ const JobDetail = () => {
         </button>
 
         <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-6">
-          <div className="flex items-start justify-between gap-4 mb-6">
-            <div className="flex-1">
-              <h1 className="text-3xl font-black text-white mb-2">
-                {job.title}
-              </h1>
+          <div className="flex items-start gap-4 mb-6">
+  <div className="w-14 h-14 rounded-xl bg-indigo-500/20 border border-indigo-500/20 flex items-center justify-center text-white text-xl font-bold shrink-0">
+    {job.company?.charAt(0)?.toUpperCase() || "J"}
+  </div>
 
-              <p className="text-indigo-400 font-semibold text-lg mb-4">
-                {job.company}
-              </p>
+  <div className="flex-1">
+    <h1 className="text-3xl font-black text-white mb-2">
+      {job.title}
+    </h1>
 
-              <div className="flex flex-wrap gap-2">
-                {job.location && (
-                  <span className="bg-white/5 border border-white/10 text-gray-400 text-xs font-medium px-3 py-1.5 rounded-full">
-                    📍 {job.location}
-                  </span>
-                )}
+    <p className="text-indigo-400 font-semibold text-lg mb-2">
+      {job.company}
+    </p>
 
-                {job.job_type && (
-                  <span className="bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-medium px-3 py-1.5 rounded-full">
-                    {job.job_type.replace("_", " ")}
-                  </span>
-                )}
+    <p className="text-gray-500 text-sm mb-4">
+      Posted {getDaysAgo(job.created_at)}
+    </p>
 
-                {job.salary && (
-                  <span className="bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium px-3 py-1.5 rounded-full">
-                    💰 {job.salary}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
+    <div className="flex flex-wrap gap-2">
+      {job.location && (
+        <span className="bg-white/5 border border-white/10 text-gray-400 text-xs font-medium px-3 py-1.5 rounded-full">
+          📍 {job.location}
+        </span>
+      )}
+
+      {job.job_type && (
+        <span className="bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-medium px-3 py-1.5 rounded-full">
+          {job.job_type.replace("_", " ")}
+        </span>
+      )}
+
+      {job.salary && (
+        <span className="bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium px-3 py-1.5 rounded-full">
+          💰 {job.salary}
+        </span>
+      )}
+    </div>
+  </div>
+</div>
 
           <div className="flex gap-3">
             {job.source_url && (
@@ -166,21 +194,47 @@ const JobDetail = () => {
               📋 Job Description
             </h2>
 
-            <div
-              className="
-                prose
-                prose-invert
-                max-w-none
-                prose-headings:text-white
-                prose-p:text-gray-300
-                prose-li:text-gray-300
-                prose-strong:text-white
-                prose-a:text-indigo-400
-              "
-              dangerouslySetInnerHTML={{
-                __html: description,
-              }}
-            />
+            <>
+  <div
+    className="
+      prose
+      prose-invert
+      max-w-none
+      prose-headings:text-white
+      prose-p:text-gray-300
+      prose-li:text-gray-300
+      prose-strong:text-white
+      prose-a:text-indigo-400
+    "
+    dangerouslySetInnerHTML={{
+      __html: expanded
+        ? description
+        : shortDescription,
+    }}
+  />
+
+  {description.length > 2000 && (
+    <button
+      onClick={() => setExpanded(!expanded)}
+      className="
+        mt-6
+        px-4
+        py-2
+        rounded-lg
+        bg-indigo-500/10
+        border
+        border-indigo-500/20
+        text-indigo-400
+        hover:bg-indigo-500/20
+        transition-all
+      "
+    >
+      {expanded
+        ? "Show Less"
+        : "Show More"}
+    </button>
+  )}
+</>
           </div>
         ) : (
           <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center">

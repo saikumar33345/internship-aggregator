@@ -2,6 +2,20 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import API from "../api/axios";
 
+const getDaysAgo = (date) => {
+  if (!date) return "Recently";
+
+  const days = Math.floor(
+    (Date.now() - new Date(date)) /
+      (1000 * 60 * 60 * 24)
+  );
+
+  if (days <= 0) return "Today";
+  if (days === 1) return "1 day ago";
+
+  return `${days} days ago`;
+};
+
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -136,57 +150,73 @@ const Jobs = () => {
           <div className="grid gap-3">
             {jobs.map((job, index) => (
               <div
-                key={job.id || index}
-                className="bg-white/5 border border-white/10 rounded-2xl p-6 card-hover"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <h2 className="text-white font-bold text-lg mb-1">
-                      {job.title}
-                    </h2>
-                    <p className="text-gray-500 text-sm font-medium mb-3">
-                      {job.company}
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {job.location && (
-                        <span className="bg-white/5 border border-white/10 text-gray-400 text-xs font-medium px-3 py-1 rounded-full">
-                          📍 {job.location}
-                        </span>
-                      )}
-                      {job.job_type && (
-                        <span className="bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-medium px-3 py-1 rounded-full">
-                          {job.job_type.replace("_", " ")}
-                        </span>
-                      )}
-                      {job.salary && (
-                        <span className="bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium px-3 py-1 rounded-full">
-                          💰 {job.salary}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+  key={job.id || index}
+  className="bg-white/5 border border-white/10 rounded-2xl p-6 card-hover hover:border-indigo-500/20 transition-all"
+>
+  <div className="flex items-start justify-between gap-4">
+    <div className="flex gap-4 flex-1">
+      <div className="w-12 h-12 rounded-xl bg-indigo-500/20 border border-indigo-500/20 flex items-center justify-center text-white font-bold text-lg shrink-0">
+        {job.company?.charAt(0)?.toUpperCase() || "J"}
+      </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      onClick={() => toggleSave(job.id)}
-                      className={`text-xl transition-all hover:scale-110 ${
-                        savedJobIds.includes(job.id)
-                          ? "text-red-400"
-                          : "text-gray-600 hover:text-red-400"
-                      }`}
-                    >
-                      {savedJobIds.includes(job.id) ? "❤️" : "🤍"}
-                    </button>
+      <div className="flex-1">
+        <h2 className="text-white font-bold text-lg mb-1">
+          {job.title}
+        </h2>
 
-                    <Link
-                      to={`/jobs/${job.id}`}
-                      className="bg-white text-black text-sm font-semibold px-4 py-2 rounded-xl hover:bg-gray-100 transition-all"
-                    >
-                      View Details →
-                    </Link>
-                  </div>
-                </div>
-              </div>
+        <p className="text-indigo-400 text-sm font-medium mb-1">
+          {job.company}
+        </p>
+
+        <p className="text-gray-600 text-xs mb-3">
+          Posted {getDaysAgo(job.created_at)}
+        </p>
+
+        <div className="flex flex-wrap gap-2">
+          {job.location && (
+            <span className="bg-white/5 border border-white/10 text-gray-400 text-xs font-medium px-3 py-1 rounded-full">
+              📍 {job.location}
+            </span>
+          )}
+
+          {job.job_type && (
+            <span className="bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-medium px-3 py-1 rounded-full">
+              {job.job_type.replace("_", " ")}
+            </span>
+          )}
+
+          {job.salary && (
+            <span className="bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-medium px-3 py-1 rounded-full">
+              💰 {job.salary}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+
+    <div className="flex items-center gap-2 shrink-0">
+      <button
+        onClick={() => toggleSave(job.id)}
+        className={`text-xl transition-all hover:scale-110 ${
+          savedJobIds.includes(job.id)
+            ? "text-red-400"
+            : "text-gray-600 hover:text-red-400"
+        }`}
+      >
+        {savedJobIds.includes(job.id)
+          ? "❤️"
+          : "🤍"}
+      </button>
+
+      <Link
+        to={`/jobs/${job.id}`}
+        className="bg-white text-black text-sm font-semibold px-4 py-2 rounded-xl hover:bg-gray-100 transition-all"
+      >
+        View Details →
+      </Link>
+    </div>
+  </div>
+</div>
             ))}
           </div>
         )}
