@@ -1,18 +1,27 @@
+from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
+from dotenv import load_dotenv
 import os
-import resend
 
-resend.api_key = os.getenv("RESEND_API_KEY")
+load_dotenv()
+
+conf = ConnectionConfig(
+    MAIL_USERNAME=os.getenv("EMAIL_USERNAME"),
+    MAIL_PASSWORD=os.getenv("EMAIL_PASSWORD"),
+    MAIL_FROM=os.getenv("EMAIL_USERNAME"),
+    MAIL_PORT=587,
+    MAIL_SERVER="smtp-relay.brevo.com",
+    MAIL_STARTTLS=True,
+    MAIL_SSL_TLS=False,
+    USE_CREDENTIALS=True,
+)
 
 async def send_alert_email(email: str, jobs: list):
-
     jobs_html = ""
 
     for job in jobs:
         jobs_html += f"""
         <div style="border:1px solid #e5e7eb; border-radius:12px; padding:16px; margin-bottom:12px;">
-            <h3 style="color:#1f2937; margin:0 0 4px 0;">
-                {job.title}
-            </h3>
+            <h3 style="color:#1f2937; margin:0 0 4px 0;">{job.title}</h3>
 
             <p style="color:#6b7280; margin:0 0 8px 0;">
                 {job.company}
@@ -54,7 +63,7 @@ async def send_alert_email(email: str, jobs: list):
 
         <div style="margin-top:24px; padding:16px; background:#f9fafb; border-radius:12px; text-align:center;">
             <a
-                href="internship-aggregator-brown.vercel.app"
+                href="https://internship-aggregator-brown.vercel.app/jobs"
                 style="color:#6366f1; text-decoration:none;"
             >
                 View all jobs on InternHub →
@@ -68,13 +77,21 @@ async def send_alert_email(email: str, jobs: list):
     </div>
     """
 
-    result = resend.Emails.send(
-        {
-            "from": "InternHub <onboarding@resend.dev>",
-            "to": email,
-            "subject": f"🚀 {len(jobs)} New Internship(s) Match Your Alerts!",
-            "html": html,
-        }
+    message = MessageSchema(
+        subject=f"🚀 {len(jobs)} New Internship(s) Match Your Alerts!",
+        recipients=[email],
+        body=html,
+        subtype="html",
     )
 
-    print("RESEND RESULT:", result)
+    try:
+        print(f"Sending email to {email}")
+
+        fm = FastMail(conf)
+        await fm.send_message(message)
+
+        print(f"Email sent successfully to {email}")
+
+    except Exception as e:
+        print(f"Email send failed for {email}: {e}")
+        raise
