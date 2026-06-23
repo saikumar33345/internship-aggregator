@@ -181,7 +181,7 @@ const Profile = () => {
           {savedJobs.length === 0 ? (
             <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
               <p className="text-gray-600 text-sm">
-                No saved jobs yet. Browse jobs and hit the heart
+                No saved jobs yet. Browse jobs and click the heart
                 button.
               </p>
             </div>
