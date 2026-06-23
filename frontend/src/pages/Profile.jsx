@@ -13,6 +13,7 @@ const Profile = () => {
   });
   const [fetching, setFetching] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [fetchStatus,setFetchStatus]=useState("");
 
   const navigate = useNavigate();
 
