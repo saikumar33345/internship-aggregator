@@ -32,28 +32,6 @@ def get_jobs(db:Session=Depends(get_db),
     jobs=query.order_by(Job.created_at.desc()).offset(skip).limit(limit).all()
     return jobs
 
-import socket
-
-@router.get("/smtp-test")
-def smtp_test():
-    try:
-        sock = socket.create_connection(
-            ("smtp-relay.brevo.com", 587),
-            timeout=10
-        )
-
-        sock.close()
-
-        return {
-            "status": "connected"
-        }
-
-    except Exception as e:
-        return {
-            "status": "failed",
-            "error": str(e)
-        }
-
 @router.get("/{id}",response_model=JobResponse)
 def get_job(id:int,db:Session=Depends(get_db)):
     job=db.query(Job).filter(Job.id==id).first()

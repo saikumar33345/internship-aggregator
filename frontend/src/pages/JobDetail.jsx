@@ -1,25 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import API from "../api/axios";
-
-const formatDescription = (html) => {
-  if (!html) return null;
-
-  return html
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n\n")
-    .replace(/<\/li>/gi, "\n")
-    .replace(/<\/h[1-6]>/gi, "\n\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&#39;/g, "'")
-    .replace(/&quot;/g, '"')
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-};
+import DOMPurify from "dompurify";
 
 const JobDetail = () => {
   const { id } = useParams();
@@ -40,6 +22,8 @@ const JobDetail = () => {
     try {
       const response = await API.get(`/jobs/${id}`);
       setJob(response.data);
+
+      console.log("JOB DESCRIPTION:", response.data.description);
     } catch (err) {
       console.error("Failed to fetch job", err);
     } finally {
@@ -102,14 +86,15 @@ const JobDetail = () => {
     );
   }
 
-  const description = formatDescription(job.description);
+  const description = DOMPurify.sanitize(
+    job.description || ""
+  );
 
   return (
     <div className="min-h-screen bg-black grid-bg pt-20">
       <div className="fixed top-0 right-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="max-w-3xl mx-auto px-6 py-10">
-        {/* Back Button */}
+      <div className="max-w-4xl mx-auto px-6 py-10">
         <button
           onClick={() => navigate("/jobs")}
           className="text-gray-500 hover:text-white text-sm mb-6 flex items-center gap-2 transition-all"
@@ -117,11 +102,10 @@ const JobDetail = () => {
           ← Back to jobs
         </button>
 
-        {/* Job Header */}
         <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-6">
           <div className="flex items-start justify-between gap-4 mb-6">
             <div className="flex-1">
-              <h1 className="text-2xl font-black text-white mb-2">
+              <h1 className="text-3xl font-black text-white mb-2">
                 {job.title}
               </h1>
 
@@ -151,7 +135,6 @@ const JobDetail = () => {
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex gap-3">
             {job.source_url && (
               <a
@@ -177,16 +160,27 @@ const JobDetail = () => {
           </div>
         </div>
 
-        {/* Job Description */}
         {description ? (
           <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
             <h2 className="text-white font-bold text-lg mb-6">
               📋 Job Description
             </h2>
 
-            <div className="text-gray-400 text-sm leading-relaxed whitespace-pre-wrap">
-              {description}
-            </div>
+            <div
+              className="
+                prose
+                prose-invert
+                max-w-none
+                prose-headings:text-white
+                prose-p:text-gray-300
+                prose-li:text-gray-300
+                prose-strong:text-white
+                prose-a:text-indigo-400
+              "
+              dangerouslySetInnerHTML={{
+                __html: description,
+              }}
+            />
           </div>
         ) : (
           <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
