@@ -6,6 +6,7 @@ from app.models.alert import AlertFilter
 from app.models.user import User
 import os
 import asyncio
+import threading
 
 load_dotenv()
 
@@ -109,7 +110,6 @@ def fetch_and_save_jobs(db: Session):
     print(f"Total new jobs saved: {total}")
     return total
 
-
 def match_and_notify(new_jobs: list, db: Session):
     if not new_jobs:
         return
@@ -118,26 +118,71 @@ def match_and_notify(new_jobs: list, db: Session):
 
     for alert in alerts:
         matched = []
+
         for job in new_jobs:
             keyword_match = True
             location_match = True
 
             if alert.keywords:
-                keywords = [k.strip().lower() for k in alert.keywords.split(",")]
-                keyword_match = any(k in job.title.lower() for k in keywords)
+                keywords = [
+                    k.strip().lower()
+                    for k in alert.keywords.split(",")
+                ]
+
+                keyword_match = any(
+                    k in job.title.lower()
+                    for k in keywords
+                )
 
             if alert.location:
-                location_match = alert.location.lower() in (job.location or "").lower()
+                location_match = (
+                    alert.location.lower()
+                    in (job.location or "").lower()
+                )
 
             if keyword_match and location_match:
                 matched.append(job)
 
-        if matched:
-            user = db.query(User).filter(User.id == alert.user_id).first()
-            if user:
-                try:
-                    from app.services.email import send_alert_email
-                    asyncio.run(send_alert_email(user.email, matched))
-                    print(f"Alert email sent to {user.email} with {len(matched)} jobs")
-                except Exception as e:
-                    print(f"Email error: {e}")
+        if not matched:
+            continue
+
+        user = (
+            db.query(User)
+            .filter(User.id == alert.user_id)
+            .first()
+        )
+
+        if not user:
+            continue
+
+        def send_email(email, jobs):
+            try:
+                import asyncio
+                from app.services.email import send_alert_email
+
+                print(
+                    f"Starting email to {email} "
+                    f"for {len(jobs)} jobs"
+                )
+
+                asyncio.run(
+                    send_alert_email(email, jobs)
+                )
+
+                print(
+                    f"Alert email sent to {email} "
+                    f"with {len(jobs)} jobs"
+                )
+
+            except Exception as e:
+                print(
+                    f"Email error for {email}: {e}"
+                )
+
+        threading.Thread(
+            target=send_email,
+            args=(user.email, matched),
+            daemon=True,
+        ).start()
+
+    print("All alert checks completed")

@@ -79,6 +79,17 @@ def patch_job(id:int,job:JobUpdate,db:Session=Depends(get_db)):
     return existing_job
 
 @router.post("/fetch")
-def trigger_fetch(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def trigger_fetch(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    print("FETCH STARTED")
+
     count = fetch_and_save_jobs(db)
-    return {"message": f"✅ Fetch complete! {count} new jobs saved. Check your email for alerts."}
+
+    print(f"FETCH FINISHED - {count}")
+
+    return {
+        "message":
+        f"✅ Fetch complete! {count} new jobs saved."
+    }
