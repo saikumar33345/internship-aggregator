@@ -7,6 +7,8 @@ from app.schemas.job import JobCreate,JobResponse,JobUpdate
 from app.services.fetch_jobs import fetch_and_save_jobs
 from app.models.user import User
 from app.services.auth import get_current_user
+from app.services.ai_summary import generate_job_summary
+import json
 
 router=APIRouter(
     prefix="/jobs",tags=["Jobs"]
@@ -94,3 +96,38 @@ def trigger_fetch(
         f"✅ Fetch complete! {count} new jobs saved."
     }
 
+@router.get("/{id}/summary")
+def get_job_summary(
+    id: int,
+    db: Session = Depends(get_db)
+):
+    job = (
+        db.query(Job)
+        .filter(Job.id == id)
+        .first()
+    )
+
+    if not job:
+        raise HTTPException(
+            status_code=404,
+            detail="Job not found"
+        )
+
+    if job.ai_summary:
+        print(f"Using cached AI summary for job {id}")
+
+        return json.loads(job.ai_summary)
+
+    
+    summary = generate_job_summary(
+        job.description
+    )
+
+   
+    job.ai_summary = json.dumps(summary)
+
+    db.commit()
+
+    print(f"Generated new AI summary for job {id}")
+
+    return summary

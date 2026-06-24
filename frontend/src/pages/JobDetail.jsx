@@ -24,6 +24,8 @@ const JobDetail = () => {
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
+  const [aiSummary, setAiSummary] = useState(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
   const [expanded,setExpanded]=useState(false);
 
   useEffect(() => {
@@ -31,6 +33,7 @@ const JobDetail = () => {
 
     fetchJob();
     checkSaved();
+    fetchSummary();
   }, [id]);
 
   const fetchJob = async () => {
@@ -45,6 +48,25 @@ const JobDetail = () => {
       setLoading(false);
     }
   };
+
+  const fetchSummary = async () => {
+  try {
+    setSummaryLoading(true);
+
+    const response = await API.get(
+      `/jobs/${id}/summary`
+    );
+
+    setAiSummary(response.data);
+  } catch (err) {
+    console.error(
+      "Failed to fetch AI summary",
+      err
+    );
+  } finally {
+    setSummaryLoading(false);
+  }
+};
 
   const checkSaved = async () => {
     try {
@@ -187,13 +209,103 @@ const shortDescription =
             </button>
           </div>
         </div>
+        {summaryLoading ? (
+  <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-6">
+    <div className="animate-pulse">
+      <div className="h-5 bg-white/10 rounded w-40 mb-6"></div>
+
+      <div className="space-y-3">
+        <div className="h-4 bg-white/10 rounded"></div>
+        <div className="h-4 bg-white/10 rounded w-5/6"></div>
+        <div className="h-4 bg-white/10 rounded w-4/6"></div>
+      </div>
+    </div>
+  </div>
+) : aiSummary && (
+  <div className="bg-indigo-500/5 border border-indigo-500/20 rounded-2xl p-8 mb-6">
+    <h2 className="text-white font-bold text-lg mb-6">
+      🤖 AI Summary
+    </h2>
+
+    <div className="grid md:grid-cols-3 gap-6">
+
+      <div>
+        <h3 className="text-indigo-400 font-semibold mb-3">
+          What You'll Do
+        </h3>
+
+        <ul className="space-y-2">
+          {aiSummary.what_youll_do?.map(
+            (item, index) => (
+              <li
+                key={index}
+                className="text-gray-300 text-sm"
+              >
+                • {item}
+              </li>
+            )
+          )}
+        </ul>
+      </div>
+
+      <div>
+        <h3 className="text-indigo-400 font-semibold mb-3">
+          What You'll Need
+        </h3>
+
+        <ul className="space-y-2">
+          {aiSummary.what_you_need?.map(
+            (item, index) => (
+              <li
+                key={index}
+                className="text-gray-300 text-sm"
+              >
+                • {item}
+              </li>
+            )
+          )}
+        </ul>
+      </div>
+
+      <div>
+        <h3 className="text-indigo-400 font-semibold mb-3">
+          Why Apply
+        </h3>
+
+        <ul className="space-y-2">
+          {aiSummary.why_apply?.length > 0 ? (
+  aiSummary.why_apply.map((item, index) => (
+    <li key={index} className="text-gray-300 text-sm">
+      • {item}
+    </li>
+  ))
+) : (
+  <li className="text-gray-500 text-sm">
+    No insights available
+  </li>
+)}
+        </ul>
+      </div>
+
+    </div>
+  </div>
+)}
 
         {description ? (
           <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
             <h2 className="text-white font-bold text-lg mb-6">
               📋 Job Description
             </h2>
-
+           <>
+  {description.length < 1000 && (
+    <div className="mb-4 rounded-lg border border-yellow-500/20 bg-yellow-500/10 p-3">
+      <p className="text-yellow-300 text-sm">
+        ⚠️ This description may be shortened by the job provider.
+        Use "Apply Now" to view the complete posting.
+      </p>
+    </div>
+  )}
+</>
             <>
   <div
     className="

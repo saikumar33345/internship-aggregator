@@ -13,7 +13,8 @@ class Job(Base):
     salary = Column(String, nullable=True)
     job_type = Column(String, nullable=True)
     source_url = Column(String, nullable=True)
-    description=Column(String,nullable=True)
+    description = Column(Text, nullable=True)
+    ai_summary = Column(Text, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
 

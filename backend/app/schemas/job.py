@@ -10,15 +10,17 @@ class JobCreate(BaseModel):
     job_type:Optional[str]=None
     source_url:Optional[str]=None
     description:Optional[str]=None
+    ai_summary:Optional[str]=None
 
 class JobUpdate(BaseModel):
     title:Optional[str]=None
     company:Optional[str]=None
-    loaction:Optional[str]=None
+    loction:Optional[str]=None
     salary:Optional[str]=None
     job_type:Optional[str]=None
     source_url:Optional[str]=None
     description:Optional[str]=None
+    ai_summary:Optional[str]=None
 class JobResponse(BaseModel):
     id:int
     title:str
@@ -28,6 +30,7 @@ class JobResponse(BaseModel):
     job_type:Optional[str]=None
     source_url:Optional[str]=None
     description:Optional[str]=None
+    ai_summary:Optional[str]=None
     created_at:datetime
 
 
