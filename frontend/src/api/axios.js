@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "internship-aggregator-production.up.railway.app",
+  baseURL: "http://internship-aggregator-production.up.railway.app",
 });
 
 API.interceptors.request.use((config) => {
