@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 import API from "../api/axios";
 
 const Register = () => {
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -19,12 +21,13 @@ const Register = () => {
 
     try {
       await API.post("/auth/register", {
+        username,
         email,
         password,
       });
 
       const formData = new FormData();
-      formData.append("username", email);
+      formData.append("username", username);
       formData.append("password", password);
 
       const loginResponse = await API.post(
@@ -46,6 +49,36 @@ const Register = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleSuccess = async (
+    credentialResponse
+  ) => {
+    try {
+      const response = await API.post(
+        "/auth/google",
+        {
+          credential:
+            credentialResponse.credential,
+        }
+      );
+
+      localStorage.setItem(
+        "token",
+        response.data.access_token
+      );
+
+      window.location.href = "/jobs";
+    } catch (err) {
+      setError(
+        err.response?.data?.detail ||
+          "Google Sign-In failed."
+      );
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError("Google Sign-In failed.");
   };
 
   return (
@@ -75,6 +108,29 @@ const Register = () => {
             Start finding internships for free
           </p>
 
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-white/10"></div>
+            </div>
+
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-[#0b0b0b] px-2 text-gray-500">
+                Or
+              </span>
+            </div>
+          </div>
+
+          <div className="flex justify-center mb-6">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              theme="filled_black"
+              size="large"
+              shape="pill"
+              width="320"
+            />
+          </div>
+
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl px-4 py-3 mb-6">
               {error}
@@ -85,6 +141,23 @@ const Register = () => {
             onSubmit={handleRegister}
             className="space-y-4"
           >
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1.5">
+                Username
+              </label>
+
+              <input
+                type="text"
+                value={username}
+                onChange={(e) =>
+                  setUsername(e.target.value)
+                }
+                placeholder="john"
+                required
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+              />
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1.5">
                 Email
@@ -101,8 +174,7 @@ const Register = () => {
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
               />
             </div>
-
-            <div>
+                        <div>
               <label className="block text-sm font-medium text-gray-400 mb-1.5">
                 Password
               </label>

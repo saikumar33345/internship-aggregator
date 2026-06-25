@@ -1,14 +1,31 @@
-from pydantic import BaseModel,EmailStr
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
+
 class UserCreate(BaseModel):
-    email:EmailStr
-    password:str
+    username: str
+    email: EmailStr
+    password: str
+
+
 class UserResponse(BaseModel):
-    id:int
-    email:EmailStr
-    created_at:datetime
-    
+    id: int
+    username: str | None = None
+    email: EmailStr
+    google_id: str | None = None
+    created_at: datetime
 
     class Config:
-        from_attributes=True
+        from_attributes = True
+
+
+class GoogleLoginRequest(BaseModel):
+    credential: str
+
+
+class UsernameUpdate(BaseModel):
+    username: str
+
+
+class GoogleLinkRequest(BaseModel):
+    credential: str

@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
+import {GoogleLogin} from "@react-oauth/google";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [username, setUsername] = useState("");
   const [savedJobs, setSavedJobs] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [newAlert, setNewAlert] = useState({
@@ -13,7 +16,7 @@ const Profile = () => {
   });
   const [fetching, setFetching] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [fetchStatus,setFetchStatus]=useState("");
+  const [fetchStatus, setFetchStatus] = useState("");
 
   const navigate = useNavigate();
 
@@ -43,6 +46,7 @@ const Profile = () => {
       ]);
 
       setUser(userRes.data);
+      setUsername(userRes.data.username || "");
       setSavedJobs(savedRes.data);
       setAlerts(alertsRes.data);
     } catch (err) {
@@ -56,9 +60,7 @@ const Profile = () => {
     try {
       await API.delete(`/saved-jobs/${jobId}`);
 
-      setSavedJobs((prev) =>
-        prev.filter((job) => job.id !== jobId)
-      );
+      setSavedJobs((prev) => prev.filter((job) => job.id !== jobId));
     } catch (err) {
       console.error("Failed to unsave job", err);
     }
@@ -68,9 +70,7 @@ const Profile = () => {
     try {
       await API.delete(`/alerts/${alertId}`);
 
-      setAlerts((prev) =>
-        prev.filter((a) => a.id !== alertId)
-      );
+      setAlerts((prev) => prev.filter((a) => a.id !== alertId));
     } catch (err) {
       console.error("Failed to delete alert", err);
     }
@@ -95,25 +95,57 @@ const Profile = () => {
   };
 
   const handleFetchJobs = async () => {
-  setFetching(true);
-  setFetchStatus("");
+    setFetching(true);
+    setFetchStatus("");
+
+    try {
+      const response = await API.post("/jobs/fetch", {}, { timeout: 180000 });
+      setFetchStatus(response.data.message);
+    } catch (err) {
+      setFetchStatus("Fetch failed. Try again.");
+      console.error("Failed to fetch jobs", err);
+    } finally {
+      setFetching(false);
+    }
+  };
+  const handleUpdateUsername = async () => {
   try {
-    const response = await API.post("/jobs/fetch", {}, { timeout: 180000 });
-    setFetchStatus(response.data.message);
+    const response = await API.patch("/auth/username", {
+      username,
+    });
+
+    setUser(response.data);
+    setUsername(response.data.username);
+    setEditingUsername(false);
   } catch (err) {
-    setFetchStatus(" Fetch failed. Try again.");
-    console.error("Failed to fetch jobs", err);
-  } finally {
-    setFetching(false);
+    alert(
+      err.response?.data?.detail ||
+      "Failed to update username."
+    );
+  }
+};
+const handleLinkGoogle = async (credentialResponse) => {
+  try {
+    await API.post("/auth/link-google", {
+      credential: credentialResponse.credential,
+    });
+
+    const userRes = await API.get("/auth/me");
+    setUser(userRes.data);
+
+    alert("Google account linked successfully!");
+  } catch (err) {
+    alert(
+      err.response?.data?.detail ||
+      "Failed to link Google account."
+    );
   }
 };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-black grid-bg pt-20 flex items-center justify-center">
-        <div className="text-gray-500 text-sm">
-          Loading profile...
-        </div>
+        <div className="text-gray-500 text-sm">Loading profile...</div>
       </div>
     );
   }
@@ -123,21 +155,60 @@ const Profile = () => {
       <div className="fixed top-0 left-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-4xl mx-auto px-6 py-10">
+        {/* Profile Header */}
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-3 mb-1">
               <div className="w-10 h-10 bg-indigo-500/20 border border-indigo-500/30 rounded-xl flex items-center justify-center text-indigo-400 font-black text-lg">
-                {user?.email?.[0]?.toUpperCase()}
+                {(user?.username || user?.email)?.[0]?.toUpperCase()}
               </div>
 
               <div>
-                <h1 className="text-white font-bold text-lg">
-                  {user?.email}
-                </h1>
+                <div className="flex items-center gap-3">
+                  {editingUsername ? (
+                    <>
+                      <input
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        className="bg-white/5 border border-white/10 rounded-lg px-3 py-1 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
 
-                <p className="text-gray-600 text-xs">
-                  InternHub Member
-                </p>
+                      <button
+                        onClick={handleUpdateUsername}
+                        className="text-green-400 hover:text-green-300 text-sm"
+                      >
+                        Save
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setUsername(user.username || "");
+                          setEditingUsername(false);
+                        }}
+                        className="text-red-400 hover:text-red-300 text-sm"
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <h1 className="text-white font-bold text-lg">
+                        {user?.username || user?.email}
+                      </h1>
+
+                      <button
+                        onClick={() => setEditingUsername(true)}
+                        className="text-indigo-400 hover:text-indigo-300 text-sm font-medium"
+                      >
+                        Edit
+                      </button>
+                    </>
+                  )}
+                </div>
+
+                <p className="text-gray-500 text-sm">{user?.email}</p>
+
+                <p className="text-gray-600 text-xs">InternHub Member</p>
               </div>
             </div>
           </div>
@@ -150,39 +221,65 @@ const Profile = () => {
             {fetching ? "Fetching..." : "⚡ Refresh Jobs"}
           </button>
         </div>
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-6">
+  <h2 className="text-white font-semibold text-lg mb-2">
+    Google Account
+  </h2>
 
+  {user?.google_id ? (
+    <div className="flex items-center justify-between">
+      <p className="text-green-400">
+        ✅ Google account connected
+      </p>
+
+      <span className="text-sm text-gray-500">
+        Secure sign-in enabled
+      </span>
+    </div>
+  ) : (
+    <>
+      <p className="text-gray-400 mb-4">
+        Link your Google account to sign in with Google in addition to your password.
+      </p>
+
+      <GoogleLogin
+        onSuccess={handleLinkGoogle}
+        onError={() =>
+          alert("Google Sign-In failed.")
+        }
+        theme="filled_black"
+        size="large"
+        shape="pill"
+      />
+    </>
+  )}
+</div>
+
+        {/* Stats */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center">
             <div className="text-3xl font-black text-white mb-1">
               {savedJobs.length}
             </div>
-
-            <div className="text-gray-500 text-sm">
-              Saved Jobs
-            </div>
+            <div className="text-gray-500 text-sm">Saved Jobs</div>
           </div>
 
           <div className="bg-white/5 border border-white/10 rounded-2xl p-5 text-center">
             <div className="text-3xl font-black text-white mb-1">
               {alerts.length}
             </div>
-
-            <div className="text-gray-500 text-sm">
-              Active Alerts
-            </div>
+            <div className="text-gray-500 text-sm">Active Alerts</div>
           </div>
         </div>
 
+        {/* Saved Jobs */}
         <div className="mb-6">
-          <h2 className="text-white font-bold text-xl mb-4">
-            ❤️ Saved Jobs
-          </h2>
+          <h2 className="text-white font-bold text-xl mb-4">❤️ Saved Jobs</h2>
 
           {savedJobs.length === 0 ? (
             <div className="bg-white/5 border border-white/10 rounded-2xl p-8 text-center">
               <p className="text-gray-600 text-sm">
-                No saved jobs yet. Browse jobs and click the heart
-                button.
+                No saved jobs yet. Browse jobs and click the heart button.
               </p>
             </div>
           ) : (
@@ -197,9 +294,7 @@ const Profile = () => {
                       {job.title}
                     </h3>
 
-                    <p className="text-gray-500 text-sm mb-2">
-                      {job.company}
-                    </p>
+                    <p className="text-gray-500 text-sm mb-2">{job.company}</p>
 
                     <div className="flex gap-2 flex-wrap">
                       {job.location && (
@@ -241,10 +336,9 @@ const Profile = () => {
           )}
         </div>
 
+        {/* Job Alerts */}
         <div>
-          <h2 className="text-white font-bold text-xl mb-4">
-            🔔 Job Alerts
-          </h2>
+          <h2 className="text-white font-bold text-xl mb-4">🔔 Job Alerts</h2>
 
           <form
             onSubmit={handleCreateAlert}
@@ -260,10 +354,7 @@ const Profile = () => {
                 placeholder="Keywords (e.g. python, react)"
                 value={newAlert.keywords}
                 onChange={(e) =>
-                  setNewAlert({
-                    ...newAlert,
-                    keywords: e.target.value,
-                  })
+                  setNewAlert({ ...newAlert, keywords: e.target.value })
                 }
                 className="flex-1 min-w-[150px] bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
               />
@@ -273,10 +364,7 @@ const Profile = () => {
                 placeholder="Location"
                 value={newAlert.location}
                 onChange={(e) =>
-                  setNewAlert({
-                    ...newAlert,
-                    location: e.target.value,
-                  })
+                  setNewAlert({ ...newAlert, location: e.target.value })
                 }
                 className="w-36 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
               />
@@ -318,9 +406,7 @@ const Profile = () => {
                   </div>
 
                   <button
-                    onClick={() =>
-                      handleDeleteAlert(alert.id)
-                    }
+                    onClick={() => handleDeleteAlert(alert.id)}
                     className="text-gray-600 hover:text-red-400 transition-all text-lg ml-4"
                   >
                     ✕
