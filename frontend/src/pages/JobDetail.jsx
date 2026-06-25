@@ -56,6 +56,7 @@ const JobDetail = () => {
     const response = await API.get(
       `/jobs/${id}/summary`
     );
+    console.log("AI SUMMARY RESPONSE:",response.data);
 
     setAiSummary(response.data);
   } catch (err) {
