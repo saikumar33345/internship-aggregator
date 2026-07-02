@@ -68,7 +68,7 @@ const ForgotPassword = () => {
 
       alert("Password reset successfully!");
       setTimeout(()=> {navigate("/login")},1500);
-      
+
     } catch (err) {
       setError(err.response?.data?.detail || "Failed to reset password.");
     } finally {
