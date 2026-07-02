@@ -122,6 +122,12 @@ def get_job_summary(
     summary = generate_job_summary(
         job.description
     )
+    error_messages={"AI summary temporarily unavailable",
+                    "Unable to generate AI summary",}
+    
+    if(summary["what_youll_do"] and summary["what_youll_do"][0] in error_messages ):
+     print(f"AI summary generation failed..")
+     return summary
 
    
     job.ai_summary = json.dumps(summary)
