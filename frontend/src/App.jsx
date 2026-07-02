@@ -26,7 +26,6 @@ function App(){
       <Route path="/jobs/:id" element={<JobDetail />} />
       <Route path="*" element={<NotFound />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
     </Routes>
     <Footer />
     </BrowserRouter>
