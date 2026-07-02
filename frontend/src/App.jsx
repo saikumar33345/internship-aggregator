@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard"
 import NotFound from "./pages/NotFound"
 import Footer from "./components/Footer"
 import JobDetail from "./pages/JobDetail"
+import ForgotPassword from "./pages/ForgotPassword"
 
 function App(){
   return(
@@ -24,6 +25,8 @@ function App(){
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/jobs/:id" element={<JobDetail />} />
       <Route path="*" element={<NotFound />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
     </Routes>
     <Footer />
     </BrowserRouter>
