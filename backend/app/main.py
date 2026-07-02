@@ -6,6 +6,7 @@ from app.models.job import Job
 from app.models.user import User
 from app.models.alert import AlertFilter
 from app.models.saved_job import SavedJob
+from app.models.password_reset_otp import PasswordResetOTP
 from app.services.scheduler import start_scheduler
 
 
@@ -13,6 +14,7 @@ Job.metadata.create_all(bind=engine)
 User.metadata.create_all(bind=engine)
 AlertFilter.metadata.create_all(bind=engine)
 SavedJob.metadata.create_all(bind=engine)
+PasswordResetOTP.metadata.create_all(bind=engine)
 
 
 app=FastAPI(title="Internship Aggregator API")

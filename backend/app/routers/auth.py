@@ -12,6 +12,17 @@ from app.schemas.user import UserCreate, UserResponse,GoogleLoginRequest,Usernam
 from app.services.auth import create_access_token, get_current_user
 
 from passlib.context import CryptContext
+from datetime import datetime, timedelta
+
+from app.models.password_reset_otp import PasswordResetOTP
+from app.schemas.user import (
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
+)
+from app.services.otp import (
+    generate_otp,
+    send_password_reset_otp,
+)
 
 router = APIRouter(
     prefix="/auth",
@@ -319,3 +330,40 @@ def update_username(
     db.refresh(current_user)
 
     return current_user
+
+@router.post("/forgot-password")
+async def forgot_password(
+    data: ForgotPasswordRequest,
+    db: Session = Depends(get_db),
+):
+    user = (
+        db.query(User)
+        .filter(User.email == data.email)
+        .first()
+    )
+
+    # Don't reveal whether the email exists
+    if user is None:
+        return {
+            "message": "If the email exists, an OTP has been sent."
+        }
+
+    otp = generate_otp()
+
+    reset_request = PasswordResetOTP(
+        user_id=user.id,
+        otp=hash_password(otp),
+        expires_at=datetime.utcnow() + timedelta(minutes=10),
+    )
+
+    db.add(reset_request)
+    db.commit()
+
+    await send_password_reset_otp(
+        user.email,
+        otp,
+    )
+
+    return {
+        "message": "If the email exists, an OTP has been sent."
+    }

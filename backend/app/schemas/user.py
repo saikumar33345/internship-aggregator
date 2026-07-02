@@ -29,3 +29,12 @@ class UsernameUpdate(BaseModel):
 
 class GoogleLinkRequest(BaseModel):
     credential: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    otp: str
+    new_password: str
