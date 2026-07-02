@@ -368,6 +368,7 @@ async def forgot_password(
         "message": "If the email exists, an OTP has been sent."
     }
 
+
 @router.post("/reset-password")
 def reset_password(
     data: ResetPasswordRequest,
@@ -420,7 +421,15 @@ def reset_password(
         data.new_password
     )
 
-    reset_otp.used = True
+    # Invalidate all remaining unused OTPs
+    (
+        db.query(PasswordResetOTP)
+        .filter(
+            PasswordResetOTP.user_id == user.id,
+            PasswordResetOTP.used == False,
+        )
+        .update({"used": True})
+    )
 
     db.commit()
 
