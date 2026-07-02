@@ -367,3 +367,63 @@ async def forgot_password(
     return {
         "message": "If the email exists, an OTP has been sent."
     }
+
+@router.post("/reset-password")
+def reset_password(
+    data: ResetPasswordRequest,
+    db: Session = Depends(get_db),
+):
+    user = (
+        db.query(User)
+        .filter(User.email == data.email)
+        .first()
+    )
+
+    if user is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid email or OTP."
+        )
+
+    reset_otp = (
+        db.query(PasswordResetOTP)
+        .filter(
+            PasswordResetOTP.user_id == user.id,
+            PasswordResetOTP.used == False,
+        )
+        .order_by(PasswordResetOTP.created_at.desc())
+        .first()
+    )
+
+    if reset_otp is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid or expired OTP."
+        )
+
+    if reset_otp.expires_at < datetime.utcnow():
+        raise HTTPException(
+            status_code=400,
+            detail="OTP has expired."
+        )
+
+    if not verify_password(
+        data.otp,
+        reset_otp.otp,
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid OTP."
+        )
+
+    user.password = hash_password(
+        data.new_password
+    )
+
+    reset_otp.used = True
+
+    db.commit()
+
+    return {
+        "message": "Password reset successfully."
+    }
